@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mon Spotify</title>
+  <link rel="icon" href="https://raw.githubusercontent.com/viernoi86/Log-spo/refs/heads/main/1751471049857.png">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      background-color: #121212;
+      color: white;
+    }
+
+    header {
+      background-color: #000;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      color: #1db954;
+    }
+
+    .logo img {
+      height: 40px;
+      vertical-align: middle;
+      margin-right: 10px;
+    }
+
+    .player {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: #181818;
+      padding: 30px 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    .song-title {
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+
+    .controls button {
+      background-color: #1db954;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 50px;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .controls button:hover {
+      background-color: #1ed760;
+    }
+
+    .progress-container {
+      width: 100%;
+      background: #333;
+      height: 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .progress {
+      height: 100%;
+      background: #1db954;
+      width: 0%;
+      border-radius: 10px;
+    }
+
+    .time-display {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 15px;
+    }
+
+    /* BARRE DE VOLUME */
+    .volume-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    #volume-slider {
+      width: 100%;
+      appearance: none;
+      height: 6px;
+      background: #333;
+      border-radius: 10px;
+      outline: none;
+    }
+
+    #volume-slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      background: #1db954;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    #volume-slider::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      background: #1db954;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .playlist {
+      margin-top: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .playlist button {
+      display: block;
+      width: 100%;
+      margin: 5px 0;
+      padding: 10px;
+      text-align: left;
+      background-color: #282828;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .playlist button:hover {
+      background-color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <img src="https://raw.githubusercontent.com/viernoi86/Log-spo/refs/heads/main/1751471049857.png" alt="Logo Spotify">
+      Mon Spotify
+    </div>
+  </header>
+
+  <div class="player">
+    <div class="song-title" id="song-title">Sélectionnez une musique</div>
+
+    <div class="controls">
+      <button onclick="prevSong()">⏮ Précédent</button>
+      <button onclick="togglePlay()">⏯ Lecture / Pause</button>
+      <button onclick="nextSong()">⏭ Suivant</button>
+      <button onclick="toggleShuffle()" id="shuffle-btn">🔀 Aléatoire OFF</button>
+    </div>
+
+    <div class="progress-container" onclick="seek(event)">
+      <div class="progress" id="progress-bar"></div>
+    </div>
+
+    <div class="time-display">
+      <span id="current-time">0:00</span>
+      <span id="duration">0:00</span>
+    </div>
+
+    <!-- ⭐ BARRE DE VOLUME ⭐ -->
+    <div class="volume-container">
+      <span>🔊</span>
+      <input type="range" id="volume-slider" min="0" max="1" step="0.01">
+    </div>
+
+    <audio id="audio"></audio>
+
+    <div class="playlist" id="playlist-container"></div>
+  </div>
+
+  <script>
+    const playlist = [
+      { name: "Void super slowed", url: "https://raw.githubusercontent.com/viernoi86/Musique/main/ISQ%20-%20VOID%20(SUPER%20SLOWED).mp3" },
+      { name: "GOOD LOTAL THOTS INSTRUMENTAL", url: "https://raw.githubusercontent.com/viernoi86/Musique/main/GOOD%20LOYAL%20THOTS%20-%20Instrumental%20ODECORE%20(320K).mp3" },
+      { name: "Porsche", url: "https://raw.githubusercontent.com/viernoi86/Musique/main/PORSCHE%20NXY0TAR0%20(320K).mp3" },
+      { name: "(It Goes Like) Nanana", url: "https://raw.githubusercontent.com/viernoi86/Musique/main/(It%20Goes%20Like)%20Nanana%20-%20Edit.mp3" },
+      { name: "Around the World", url: "https://raw.githubusercontent.com/viernoi86/Musique/main/Around%20the%20World.mp3" },
+      { name: "Billie Jean", url: "https://raw.githubusercontent.com/viernoi86/Musique/main/Billie%20Jean.mp3" },
+      { name: "DICE AND ROLL", url: "https://raw.githubusercontent.com/viernoi86/Musique/main/DICE%20AND%20ROLL.mp3" },
+      { name: "Diamondz n Roses", url: "https://raw.githubusercontent.com/viernoi86/Musique/main/Diamondz%20n%20Roses.mp3" },
+      { name: "FASHION", url: "https://raw.githubusercontent.com/viernoi86/Musique/main/Fashion.mp3" },
+      { name: "YOU'RE TOO SLOW", url: "https://raw.githubusercontent.com/viernoi86/Musique/main/YOU'RE%20TOO%20SLOW%20-%20Slowed%20%26%20Reverbed.mp3" },
+      { name: "jealous", url: "https://raw.githubusercontent.com/viernoi86/Musique/main/Jealous.mp3" },
+      { name: "NARCISSISTIC PERSONALITY ", url: "https://raw.githubusercontent.com/viernoi86/Musique/refs/heads/main/NARCISSISTIC%20PERSONALITY%20DISORDER.mp3" },
+      { name: "Roi - Instrumental Slowed", url: "https://raw.githubusercontent.com/viernoi86/Musique/refs/heads/main/Roi%20-%20Instrumental%20Slowed.mp3" },
+      { name: "omg", url: "https://raw.githubusercontent.com/viernoi86/Musique/refs/heads/main/omg.mp3" },
+      { name: "noir", url: "https://raw.githubusercontent.com/viernoi86/Musique/refs/heads/main/noir.mp3" },
+      { name: "moment", url: "https://raw.githubusercontent.com/viernoi86/Musique/refs/heads/main/moment.mp3" },
+      { name: "i like the way you kiss me - sped up", url: "https://raw.githubusercontent.com/viernoi86/Musique/refs/heads/main/i%20like%20the%20way%20you%20kiss%20me%20-%20sped%20up.mp3" },
+      { name: "Veridis Quo", url: "https://raw.githubusercontent.com/viernoi86/Musique/refs/heads/main/Veridis%20Quo.mp3" },
+      { name: "VVV - HE'S BACK", url: "https://raw.githubusercontent.com/viernoi86/Musique/refs/heads/main/VVV%20-%20HE'S%20BACK.mp3" },
+      { name: "Lovin On Me", url: "https://raw.githubusercontent.com/viernoi86/Musique/refs/heads/main/Lovin%20On%20Me.mp3" },
+      { name: "JERK!", url: "https://raw.githubusercontent.com/viernoi86/Musique/refs/heads/main/JERK!.mp3" },
+      { name: "Not My Problem", url: "https://raw.githubusercontent.com/viernoi86/Musique/refs/heads/main/Not%20My%20Problem.mp3" },
+      { name: "SPIT IN MY FACE!", url: "https://raw.githubusercontent.com/viernoi86/Musique/refs/heads/main/SpotiDown.App%20-%20SPIT%20IN%20MY%20FACE_%20-%20ThxSoMch(1).mp3" } ,
+      { name: "did i tell u that i miss u", url: "https://raw.githubusercontent.com/viernoi86/Musique/refs/heads/main/SpotiDown.App%20-%20did%20i%20tell%20u%20that%20i%20miss%20u%20-%20adore(1).mp3"} ,
+    ];
+
+    let currentIndex = 0;
+    let isShuffle = false;
+    const audio = document.getElementById("audio");
+    const title = document.getElementById("song-title");
+    const currentTimeEl = document.getElementById("current-time");
+    const durationEl = document.getElementById("duration");
+    const progressBar = document.getElementById("progress-bar");
+    const shuffleBtn = document.getElementById("shuffle-btn");
+    const playlistContainer = document.getElementById("playlist-container");
+
+    playlist.forEach((song, i) => {
+      const btn = document.createElement("button");
+      btn.textContent = "🔊 " + song.name;
+      btn.onclick = () => playSong(i);
+      playlistContainer.appendChild(btn);
+    });
+
+    function playSong(index) {
+      currentIndex = index;
+      audio.src = playlist[index].url;
+      title.innerText = playlist[index].name;
+      audio.play();
+    }
+
+    function togglePlay() {
+      if (!audio.src) playSong(currentIndex);
+      else if (audio.paused) audio.play();
+      else audio.pause();
+    }
+
+    function nextSong() {
+      if (isShuffle) {
+        currentIndex = Math.floor(Math.random() * playlist.length);
+      } else {
+        currentIndex = (currentIndex + 1) % playlist.length;
+      }
+      playSong(currentIndex);
+    }
+
+    function prevSong() {
+      currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+      playSong(currentIndex);
+    }
+
+    function toggleShuffle() {
+      isShuffle = !isShuffle;
+      shuffleBtn.textContent = isShuffle ? "🔀 Aléatoire ON" : "🔀 Aléatoire OFF";
+    }
+
+    function updateProgress() {
+      const percent = (audio.currentTime / audio.duration) * 100;
+      progressBar.style.width = percent + "%";
+      currentTimeEl.textContent = formatTime(audio.currentTime);
+      durationEl.textContent = formatTime(audio.duration);
+    }
+
+    function formatTime(time) {
+      if (isNaN(time)) return "0:00";
+      const minutes = Math.floor(time / 60);
+      const seconds = Math.floor(time % 60).toString().padStart(2, "0");
+      return `${minutes}:${seconds}`;
+    }
+
+    function seek(e) {
+      const width = e.currentTarget.clientWidth;
+      const clickX = e.offsetX;
+      const duration = audio.duration;
+      audio.currentTime = (clickX / width) * duration;
+    }
+
+    audio.addEventListener("timeupdate", updateProgress);
+    audio.addEventListener("ended", nextSong);
+
+    /* ⭐ GESTION DU VOLUME ⭐ */
+    const volumeSlider = document.getElementById("volume-slider");
+    audio.volume = 0.5; // volume par défaut
+    volumeSlider.value = audio.volume;
+
+    volumeSlider.addEventListener("input", () => {
+      audio.volume = volumeSlider.value;
+    });
+
+    window.addEventListener("load", () => {
+      audio.src = playlist[0].url;
+      title.innerText = playlist[0].name;
+    });
+  </script>
+</body>
+</html>
